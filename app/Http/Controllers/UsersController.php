@@ -98,7 +98,9 @@ class UsersController extends Controller
         $user->loadRelationshipCounts();
 
         // ユーザのフェイバリット一覧を取得
-        $favorites = $user->favorite_microposts()->orderBy('created_at', 'desc')->paginate(10);
+        $favorites = $user->favorites()->paginate(10);
+        
+        //$favorites = $user->favorite_microposts()->orderBy('created_at', 'desc')->paginate(10);
         // フェイバリット一覧ビューでそれらを表示
         return view('users.favorites', [
             'user' => $user,

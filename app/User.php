@@ -138,7 +138,7 @@ class User extends Authenticatable
     
     public function favorites()
     {
-        return $this->belongsToMany(User::class, 'favorites', 'user_id', 'micropost_id')->withTimestamps();
+        return $this->belongsToMany(Micropost::class, 'favorites', 'user_id', 'micropost_id')->withTimestamps();
     }
     
     
@@ -153,7 +153,7 @@ class User extends Authenticatable
         // すでにフォローしているかの確認
         $exist = $this->is_favorite($micropostId);
         // 相手が自分自身かどうかの確認
-       // $its_me = $this->id == $micropostId;
+        //$its_me = $this->id == $micropostId;
 
         if ($exist) {
             // すでにフェイバリットしていれば何もしない
@@ -178,7 +178,7 @@ class User extends Authenticatable
         // 相手が自分自身かどうかの確認
         //$its_me = $this->id == $userId;
 
-        if ($exist /*&& !$its_me:*/) {
+        if ($exist) {
             // すでにフェイバリットしていればフェイバリットを外す
             $this->favorites()->detach($micropostId);
             return true;

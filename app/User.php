@@ -120,7 +120,7 @@ class User extends Authenticatable
     */
     public function loadRelationshipCounts()
     {
-        $this->loadCount(['microposts', 'followings', 'followers']);
+        $this->loadCount(['microposts', 'followings', 'followers', 'favorites']);
     }
     
     /**
@@ -132,6 +132,86 @@ class User extends Authenticatable
         $userIds = $this->followings()->pluck('users.id')->toArray();
         // このユーザのidもその配列に追加
         $userIds[] = $this->id;
+        // それらのユーザが所有する投稿に絞り込む
+        return Micropost::whereIn('user_id', $userIds);
+    }
+    
+    public function favorites()
+    {
+        return $this->belongsToMany(User::class, 'favorites', 'user_id', 'micropost_id')->withTimestamps();
+    }
+    
+    
+        /**
+     * $userIdで指定されたユーザをフェイバリットする。
+     *
+     * @param  int  $userId
+     * @return bool
+     */
+    public function favorite($micropostId)
+    {
+        // すでにフォローしているかの確認
+        $exist = $this->is_favorite($micropostId);
+        // 相手が自分自身かどうかの確認
+       // $its_me = $this->id == $micropostId;
+
+        if ($exist) {
+            // すでにフェイバリットしていれば何もしない
+            return false;
+        } else {
+            // 未フェイバリットであればフェイバリットする
+            $this->favorites()->attach($micropostId);
+            return true;
+        }
+    }
+
+    /**
+     * $userIdで指定されたユーザをアンフェイバリットする。
+     *
+     * @param  int  $userId
+     * @return bool
+     */
+    public function unfavorite($micropostId)
+    {
+        // すでにフェイバリットしているかの確認
+        $exist = $this->is_favorite($micropostId);
+        // 相手が自分自身かどうかの確認
+        //$its_me = $this->id == $userId;
+
+        if ($exist /*&& !$its_me:*/) {
+            // すでにフェイバリットしていればフェイバリットを外す
+            $this->favorites()->detach($micropostId);
+            return true;
+        } else {
+            // 未フェイバリットであれば何もしない
+            return false;
+        }
+    }
+
+
+    public function is_favorite($micropostId)
+    {
+        // フェイバリット中ユーザの中に $userIdのものが存在するか
+        return $this->favorites()->where('micropost_id', $micropostId)->exists();
+    }
+    
+    /*public function favorite_users()
+    {
+        // このユーザがフェイバリット中のユーザのidを取得して配列にする
+        $userIds = $this->favorites()->pluck('user.id')->toArray();
+        // このユーザのidもその配列に追加
+        //$userIds[] = $this->id;
+        // それらのユーザが所有する投稿に絞り込む
+        return User::whereIn('id', $userIds);
+    }
+    */
+    
+    public function favorite_microposts()
+    {
+        // このユーザがフェイバリット中のユーザのidを取得して配列にする
+        $userIds = $this->favorites()->pluck('users.id')->toArray();
+        // このユーザのidもその配列に追加
+        //$userIds[] = $this->id;
         // それらのユーザが所有する投稿に絞り込む
         return Micropost::whereIn('user_id', $userIds);
     }
